@@ -21,9 +21,14 @@ export default function DashboardPage() {
   }, []);
 
   const onScan = async () => {
+    const ipTrim = ip.trim();
+    if (!ipTrim) {
+      window.alert("Ingresa una IP válida");
+      return;
+    }
     setLoading(true);
     try {
-      await api.post("/scan/network", { ip });
+      await api.post("/scan/network", { ip: ipTrim });
       await fetchResults();
       window.alert("Escaneo iniciado");
     } catch (err: any) {
