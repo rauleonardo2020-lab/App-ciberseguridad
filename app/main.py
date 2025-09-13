@@ -65,22 +65,40 @@ def scan_network(req: ScanRequest, current_user: User = Depends(get_current_user
     result = {}
     for host in nm.all_hosts():
         host_data = []
-        for proto in nm[host].all_protocols():
-            ports_dict = nm[host][proto]
-            for port in sorted(ports_dict.keys()):
-                entry = ports_dict[port]
-                state = entry.get("state")
-                name = entry.get("name")
-                product = entry.get("product")
-                version = entry.get("version")
-                host_data.append({
-                    "protocol": proto,
-                    "port": port,
-                    "state": state,
-                    "service": name,
-                    "product": product,
-                    "version": version,
-                })
+        host_obj = nm[host]
+        if hasattr(host_obj, "all_protocols"):
+            for proto in host_obj.all_protocols():
+                ports_dict = host_obj[proto]
+                for port in sorted(ports_dict.keys()):
+                    entry = ports_dict[port]
+                    state = entry.get("state")
+                    name = entry.get("name")
+                    product = entry.get("product")
+                    version = entry.get("version")
+                    host_data.append({
+                        "protocol": proto,
+                        "port": port,
+                        "state": state,
+                        "service": name,
+                        "product": product,
+                        "version": version,
+                    })
+        else:
+            for proto, ports_dict in host_obj.items():
+                for port in sorted(ports_dict.keys()):
+                    entry = ports_dict[port]
+                    state = entry.get("state")
+                    name = entry.get("name")
+                    product = entry.get("product")
+                    version = entry.get("version")
+                    host_data.append({
+                        "protocol": proto,
+                        "port": port,
+                        "state": state,
+                        "service": name,
+                        "product": product,
+                        "version": version,
+                    })
         result[host] = host_data
 
     scan = ScanResult(user_id=current_user.id, ip=str(req.ip), scan_payload=result)
