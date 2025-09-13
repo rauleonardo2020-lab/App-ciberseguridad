@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../state/AuthContext";
 import api from "../lib/api";
 import { ScanResult, ScanEntry } from "../types";
