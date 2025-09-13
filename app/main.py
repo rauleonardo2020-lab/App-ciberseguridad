@@ -65,11 +65,10 @@ def scan_network(req: ScanRequest, current_user: User = Depends(get_current_user
     result = {}
     for host in nm.all_hosts():
         host_data = []
-        host_dict = nm[host]
-        for proto, ports in host_dict.items():
-            lports = sorted(ports.keys())
-            for port in lports:
-                entry = ports[port]
+        for proto in nm[host].all_protocols():
+            ports_dict = nm[host][proto]
+            for port in sorted(ports_dict.keys()):
+                entry = ports_dict[port]
                 state = entry.get("state")
                 name = entry.get("name")
                 product = entry.get("product")
