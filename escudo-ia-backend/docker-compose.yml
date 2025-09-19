@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  escudo_db:
+    image: postgres:15
+    container_name: escudo_db
+    environment:
+      POSTGRES_DB: escudo_ia
+      POSTGRES_USER: escudo_user
+      POSTGRES_PASSWORD: escudo_pass
+    volumes:
+      - escudo_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U escudo_user -d escudo_ia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  escudo_backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: escudo_backend
+    environment:
+      - DATABASE_URL=postgresql://escudo_user:escudo_pass@escudo_db:5432/escudo_ia
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+    ports:
+      - "8000:8000"
+    depends_on:
+      escudo_db:
+        condition: service_healthy
+    volumes:
+      - ./licenses:/app/licenses:ro
+      - ./ops_keys:/app/ops_keys:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  escudo_frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: escudo_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - escudo_backend
+    environment:
+      - VITE_API_URL=http://localhost:8000
+
+volumes:
+  escudo_pgdata:
